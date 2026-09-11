@@ -1,0 +1,753 @@
+cat lib/main.dart
+nano lib/main.dart
+import 'package:flutter/material.dart';
+
+void main() {
+  runApp(const KaamWalaApp());
+}
+
+class KaamWalaApp extends StatelessWidget {
+  const KaamWalaApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'KaamWala',
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Colors.indigo,
+        ),
+        useMaterial3: true,
+      ),
+      home: const HomePage(),
+    );
+  }
+}
+
+class Service {
+  final String name;
+  final String category;
+  final String icon;
+  final int price;
+  final String description;
+
+  const Service(
+    this.name,
+    this.category,
+    this.icon,
+    this.price,
+    this.description,
+  );
+}
+
+const services = <Service>[
+  Service(
+    'Fan Repair / Installation',
+    'Electrician',
+    '🌀',
+    149,
+    'Fan repair, installation and basic checking.',
+  ),
+  Service(
+    'Switch & Socket Repair',
+    'Electrician',
+    '🔌',
+    99,
+    'Repair or replacement of switches and sockets.',
+  ),
+  Service(
+    'Light Installation',
+    'Electrician',
+    '💡',
+    99,
+    'Ceiling light, bulb holder and light fitting.',
+  ),
+  Service(
+    'Wiring Repair',
+    'Electrician',
+    '⚡',
+    199,
+    'Basic household wiring repair and checking.',
+  ),
+  Service(
+    'Door Repair',
+    'Carpenter',
+    '🚪',
+    199,
+    'Door adjustment, repair and fitting work.',
+  ),
+  Service(
+    'Furniture Repair',
+    'Carpenter',
+    '🪑',
+    249,
+    'Basic furniture repair and maintenance.',
+  ),
+  Service(
+    'Shelf Installation',
+    'Carpenter',
+    '🧰',
+    199,
+    'Wall shelf installation and fitting.',
+  ),
+  Service(
+    'Lock / Handle Fitting',
+    'Carpenter',
+    '🔧',
+    149,
+    'Door lock and handle fitting service.',
+  ),
+];
+
+class HomePage extends StatefulWidget {
+  const HomePage({super.key});
+
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  String selectedCategory = 'All';
+  String searchText = '';
+
+  List<Service> get visibleServices {
+    return services.where((service) {
+      final categoryMatch = selectedCategory == 'All' ||
+          service.category == selectedCategory;
+
+      final searchMatch = searchText.isEmpty ||
+          service.name.toLowerCase().contains(searchText.toLowerCase()) ||
+          service.category.toLowerCase().contains(searchText.toLowerCase());
+
+      return categoryMatch && searchMatch;
+    }).toList();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text(
+          'KaamWala 🛠️',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        actions: [
+          IconButton(
+            tooltip: 'Provider',
+            icon: const Icon(Icons.engineering_outlined),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const ProviderPage(),
+                ),
+              );
+            },
+          ),
+          IconButton(
+            tooltip: 'Admin',
+            icon: const Icon(Icons.admin_panel_settings_outlined),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const AdminPage(),
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+      body: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          const Text(
+            'Home repair, made simple',
+            style: TextStyle(
+              fontSize: 26,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 6),
+          const Text(
+            'Trusted electricians and carpenters at your doorstep.',
+          ),
+          const SizedBox(height: 20),
+
+          TextField(
+            onChanged: (value) {
+              setState(() {
+                searchText = value;
+              });
+            },
+            decoration: InputDecoration(
+              hintText: 'Search service...',
+              prefixIcon: const Icon(Icons.search),
+              suffixIcon: searchText.isNotEmpty
+                  ? IconButton(
+                      icon: const Icon(Icons.clear),
+                      onPressed: () {
+                        setState(() {
+                          searchText = '';
+                        });
+                      },
+                    )
+                  : null,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 16),
+
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                _categoryChip('All'),
+                const SizedBox(width: 8),
+                _categoryChip('Electrician'),
+                const SizedBox(width: 8),
+                _categoryChip('Carpenter'),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 22),
+
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Available Services',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              Text('${visibleServices.length} services'),
+            ],
+          ),
+
+          const SizedBox(height: 10),
+
+          if (visibleServices.isEmpty)
+            const Padding(
+              padding: EdgeInsets.all(30),
+              child: Center(
+                child: Column(
+                  children: [
+                    Icon(
+                      Icons.search_off,
+                      size: 60,
+                    ),
+                    SizedBox(height: 10),
+                    Text(
+                      'No service found',
+                      style: TextStyle(fontSize: 18),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+          ...visibleServices.map(
+            (service) => _serviceCard(service),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _categoryChip(String category) {
+    return ChoiceChip(
+      label: Text(category),
+      selected: selectedCategory == category,
+      onSelected: (_) {
+        setState(() {
+          selectedCategory = category;
+        });
+      },
+    );
+  }
+
+  Widget _serviceCard(Service service) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Row(
+          children: [
+            CircleAvatar(
+              radius: 28,
+              child: Text(
+                service.icon,
+                style: const TextStyle(fontSize: 25),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    service.name,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(service.category),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Starting ₹${service.price}',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            FilledButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => BookingPage(service: service),
+                  ),
+                );
+              },
+              child: const Text('Book'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class BookingPage extends StatefulWidget {
+  final Service service;
+
+  const BookingPage({
+    super.key,
+    required this.service,
+  });
+
+  @override
+  State<BookingPage> createState() => _BookingPageState();
+}
+
+class _BookingPageState extends State<BookingPage> {
+  final nameController = TextEditingController();
+  final phoneController = TextEditingController();
+  final addressController = TextEditingController();
+  final problemController = TextEditingController();
+
+  @override
+  void dispose() {
+    nameController.dispose();
+    phoneController.dispose();
+    addressController.dispose();
+    problemController.dispose();
+    super.dispose();
+  }
+
+  void confirmBooking() {
+    if (nameController.text.trim().isEmpty ||
+        phoneController.text.trim().isEmpty ||
+        addressController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Please fill Name, Mobile Number and Address.',
+          ),
+        ),
+      );
+      return;
+    }
+
+    if (phoneController.text.trim().length < 10) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please enter a valid mobile number.'),
+        ),
+      );
+      return;
+    }
+
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (_) => BookingStatusPage(
+          service: widget.service,
+          customerName: nameController.text.trim(),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Book Service'),
+      ),
+      body: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          Card(
+            child: ListTile(
+              leading: CircleAvatar(
+                child: Text(
+                  widget.service.icon,
+                  style: const TextStyle(fontSize: 22),
+                ),
+              ),
+              title: Text(
+                widget.service.name,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              subtitle: Text(
+                '${widget.service.category} • From ₹${widget.service.price}',
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 20),
+
+          _field(
+            nameController,
+            'Your Name',
+            Icons.person_outline,
+          ),
+
+          _field(
+            phoneController,
+            'Mobile Number',
+            Icons.phone_outlined,
+            keyboard: TextInputType.phone,
+          ),
+
+          _field(
+            addressController,
+            'Service Address',
+            Icons.location_on_outlined,
+          ),
+
+          _field(
+            problemController,
+            'Describe Your Problem',
+            Icons.notes_outlined,
+            maxLines: 4,
+          ),
+
+          const SizedBox(height: 10),
+
+          FilledButton.icon(
+            onPressed: confirmBooking,
+            icon: const Icon(Icons.check_circle_outline),
+            label: const Padding(
+              padding: EdgeInsets.symmetric(vertical: 14),
+              child: Text(
+                'Confirm Booking',
+                style: TextStyle(fontSize: 16),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _field(
+    TextEditingController controller,
+    String label,
+    IconData icon, {
+    TextInputType? keyboard,
+    int maxLines = 1,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: TextField(
+        controller: controller,
+        keyboardType: keyboard,
+        maxLines: maxLines,
+        decoration: InputDecoration(
+          labelText: label,
+          prefixIcon: Icon(icon),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class BookingStatusPage extends StatelessWidget {
+  final Service service;
+  final String customerName;
+
+  const BookingStatusPage({
+    super.key,
+    required this.service,
+    required this.customerName,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Booking Status'),
+      ),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(28),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(
+                Icons.check_circle,
+                size: 90,
+              ),
+              const SizedBox(height: 18),
+              Text(
+                'Thank you, $customerName!',
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Your booking has been received.',
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 18),
+              Text(
+                '${service.name}\nStarting ₹${service.price}',
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 17),
+              ),
+              const SizedBox(height: 25),
+              const ListTile(
+                leading: Icon(Icons.check_circle),
+                title: Text('Booking submitted'),
+              ),
+              const ListTile(
+                leading: Icon(Icons.radio_button_unchecked),
+                title: Text('Provider accepts booking'),
+              ),
+              const ListTile(
+                leading: Icon(Icons.radio_button_unchecked),
+                title: Text('Provider reaches your address'),
+              ),
+              const ListTile(
+                leading: Icon(Icons.radio_button_unchecked),
+                title: Text('Service completed'),
+              ),
+              const SizedBox(height: 16),
+              OutlinedButton(
+                onPressed: () {
+                  Navigator.popUntil(
+                    context,
+                    (route) => route.isFirst,
+                  );
+                },
+                child: const Text('Back to Home'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class ProviderPage extends StatefulWidget {
+  const ProviderPage({super.key});
+
+  @override
+  State<ProviderPage> createState() => _ProviderPageState();
+}
+
+class _ProviderPageState extends State<ProviderPage> {
+  bool available = true;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Provider Dashboard'),
+      ),
+      body: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          const Text(
+            'Service Provider 👷',
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+
+          const SizedBox(height: 16),
+
+          Card(
+            child: ListTile(
+              leading: Icon(
+                available
+                    ? Icons.toggle_on
+                    : Icons.toggle_off,
+                size: 40,
+              ),
+              title: const Text('Available for Jobs'),
+              subtitle: Text(
+                available
+                    ? 'You can receive new bookings'
+                    : 'You are currently offline',
+              ),
+              trailing: Switch(
+                value: available,
+                onChanged: (value) {
+                  setState(() {
+                    available = value;
+                  });
+                },
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 20),
+
+          const Text(
+            'New Booking Requests',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+
+          const SizedBox(height: 10),
+
+          _bookingRequest(
+            '⚡',
+            'Switch & Socket Repair',
+            'Customer • Nearby • ₹99+',
+          ),
+
+          _bookingRequest(
+            '🚪',
+            'Door Repair',
+            'Customer • Nearby • ₹199+',
+          ),
+
+          const SizedBox(height: 20),
+
+          const Card(
+            child: ListTile(
+              leading: Icon(
+                Icons.account_balance_wallet_outlined,
+                size: 35,
+              ),
+              title: Text('Today’s Earnings'),
+              subtitle: Text('₹0 demo'),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _bookingRequest(
+    String icon,
+    String title,
+    String subtitle,
+  ) {
+    return Card(
+      child: ListTile(
+        leading: CircleAvatar(
+          child: Text(icon),
+        ),
+        title: Text(title),
+        subtitle: Text(subtitle),
+        trailing: FilledButton(
+          onPressed: available
+              ? () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('$title accepted'),
+                    ),
+                  );
+                }
+              : null,
+          child: const Text('Accept'),
+        ),
+      ),
+    );
+  }
+}
+
+class AdminPage extends StatelessWidget {
+  const AdminPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Admin Dashboard'),
+      ),
+      body: ListView(
+        padding: const EdgeInsets.all(16),
+        children: const [
+          Text(
+            'Admin Panel',
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          SizedBox(height: 16),
+          Card(
+            child: ListTile(
+              leading: Icon(Icons.people_outline),
+              title: Text('Customers'),
+              subtitle: Text('Manage customer accounts'),
+              trailing: Text('0'),
+            ),
+          ),
+          Card(
+            child: ListTile(
+              leading: Icon(Icons.engineering_outlined),
+              title: Text('Service Providers'),
+              subtitle: Text(
+                'Manage electricians and carpenters',
+              ),
+              trailing: Text('0'),
+            ),
+          ),
+          Card(
+            child: ListTile(
+              leading: Icon(Icons.receipt_long_outlined),
+              title: Text('Bookings'),
+              subtitle: Text('Monitor service bookings'),
+              trailing: Text('0'),
+            ),
+          ),
+          Card(
+            child: ListTile(
+              leading: Icon(Icons.star_outline),
+              title: Text('Reviews & Complaints'),
+              subtitle: Text('Review customer feedback'),
+            ),
+          ),
+        ],
+      ),
+    
